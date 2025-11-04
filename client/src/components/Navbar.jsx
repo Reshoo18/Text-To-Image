@@ -3,7 +3,7 @@ import {assets} from '../assets/assets'
 import {Link, useNavigate}   from 'react-router-dom'
 const Navbar = () => {
 
-  const [user,setUser]=useState(null);
+  const [user,setUser]=useState(true);
   const navigate=useNavigate()
 
 
@@ -15,7 +15,12 @@ const Navbar = () => {
      <div>
       {
         user ?
-        <div></div>
+        <div>
+          <button>
+            <img className='w-5'src={assets.credit_star} alt="" />
+          </button>
+          <p>Credit left : 50</p>
+        </div>
         :
         <div className='flex items-center gap-2 sm:gap-5'>
           <p onClick={()=>navigate('/buy')} className='cursor-pointer'>
