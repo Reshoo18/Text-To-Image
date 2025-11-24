@@ -5,10 +5,11 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 const registerUser =async(req,res)=>{
+    
     try{
         const {name ,email,password}=req.body;
 
-        if(!name||!email||!password){
+        if(!name || !email || !password){
             return res.json({success:false,message:'Missing Details'})
         }
         const salt= await bcrypt.genSalt(10)
@@ -48,7 +49,9 @@ const loginUser=async(req,res)=>{
            return res({success:false,message:'Invalid credentials'})
        }
     }catch(error){
-        console.lpg(error)
+        console.log(error)
        res.json({success:false,message: error.message})
     }
 }
+
+export {registerUser,loginUser};
