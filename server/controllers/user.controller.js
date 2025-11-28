@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken'
 const registerUser =async(req,res)=>{
     
     try{
-        const {name ,email,password}=req.body;
+        const {name ,email,password}=req.body ;
 
         if(!name || !email || !password){
             return res.json({success:false,message:'Missing Details'})
@@ -44,14 +44,16 @@ const loginUser=async(req,res)=>{
 
         if(isMatch){
         const token =jwt.sign({id: user._id},process.env.JWT_SECRET)
-        res.json({success:true,token,user:{name:user.name}})
+        res.json({success:true,token,user: {name: user.name}})
        }else{
-           return res({success:false,message:'Invalid credentials'})
+           return res.json({success:false,message:'Invalid credentials'})
        }
     }catch(error){
         console.log(error)
        res.json({success:false,message: error.message})
     }
 }
+
+const userCredits = async 
 
 export {registerUser,loginUser};
