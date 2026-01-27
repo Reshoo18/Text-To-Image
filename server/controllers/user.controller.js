@@ -1,8 +1,10 @@
 import userModel from "../models/userModel.js";
 
 import bcrypt from 'bcrypt'
+import razorpay from "razorpay"
 
 import jwt from 'jsonwebtoken'
+import transactionModel from "../models/transactionModel.js";
 
 const registerUser =async(req,res)=>{
     
@@ -54,16 +56,7 @@ const loginUser=async(req,res)=>{
     }
 }
 
-// const userCredits = async (req,res) =>{
-//   try{
-//       const {userId}=req.body
-//       const user= await userModel.findById(userId)
-//       res.json({success:true,credits: user.creditBalance,user:{name:user.name}})
-//   }catch{
-//        console.log(error.message)
-//        res.json({success: false, message:error.message})
-//   }
-// }
+
 
 const userCredits = async (req, res) => {
   try {
@@ -85,4 +78,74 @@ const userCredits = async (req, res) => {
 };
 
 
-export {registerUser,loginUser,userCredits};
+const razorpayInstance = new razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET, // ✅ FIXED
+});
+
+const paymentRazorpay = async (req, res) => {
+  try {
+    const userId = req.user.id; // ✅ FROM TOKEN
+    const { planId } = req.body;
+
+    if (!planId) {
+      return res.status(400).json({ success: false, message: "Plan ID missing" });
+    }
+
+    let credits = 0;
+    let amount = 0;
+    let plan = "";
+
+    // ✅ FIXED SWITCH
+    switch (planId) {
+      case "Basic":
+        plan = "Basic";
+        credits = 100;
+        amount = 10;
+        break;
+
+      case "Advanced":
+        plan = "Advanced";
+        credits = 500;
+        amount = 50;
+        break;
+
+      case "Business":
+        plan = "Business";
+        credits = 5000;
+        amount = 250;
+        break;
+
+      default:
+        return res.status(400).json({ success: false, message: "Invalid plan" });
+    }
+
+    // ✅ CREATE ORDER FIRST
+    const order = await razorpayInstance.orders.create({
+      amount: amount * 100, // paise
+      currency: process.env.CURRENCY,
+      receipt: `rcpt_${Date.now()}`,
+    });
+
+    // ✅ SAVE TRANSACTION AFTER ORDER CREATED
+    await transactionModel.create({
+      userId,
+      plan,
+      amount,
+      credits,
+      razorpayOrderId: order.id,
+      status: "pending",
+      date: Date.now(),
+    });
+
+    return res.json({
+      success: true,
+      order,
+    });
+
+  } catch (error) {
+    console.error("Razorpay error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+export {registerUser,loginUser,userCredits,paymentRazorpay};
